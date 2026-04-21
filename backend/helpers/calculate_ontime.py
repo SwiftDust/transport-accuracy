@@ -18,6 +18,7 @@ def amount(delays: list[dict]) -> int:
         else:
             trip_worst_delay[trip_id] = max(trip_worst_delay[trip_id], delay)
 
+    # count trips where worst delay is acceptable (less than 60 seconds)
     on_time_count = sum(1 for delay in trip_worst_delay.values() if delay <= 60)
 
     return on_time_count
@@ -46,7 +47,6 @@ def percentage(delays: list[dict]) -> float:
     if not trip_worst_delay:
         return 0.0
 
-    # count trips where worst delay is acceptable (less than 60 seconds)
     on_time_count = sum(1 for delay in trip_worst_delay.values() if delay <= 60)
 
     return (on_time_count / len(trip_worst_delay)) * 100
