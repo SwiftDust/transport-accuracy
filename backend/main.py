@@ -9,6 +9,7 @@ from helpers.average_delay import average_delay
 from helpers.calculate_ontime import amount, percentage
 from helpers.database import get_delay_snapshots, init_database, store_delay_snapshot
 from wrappers.fetch_trip_updates import realtime
+from wrappers.search_completion import find_feeds
 
 
 @dataclass
@@ -123,4 +124,9 @@ async def get_country_delays(country: Country):
 
 @app.get("/delays/location/{location}")
 async def get_delays(location: str):
-    return {"message": f"Hello {location}"}
+    return {"error": f"locations are not supported yet"}
+
+
+@app.get("/search/{query}")
+async def search_feeds(query: str):
+    return await find_feeds(query, "gtfs_rt")
