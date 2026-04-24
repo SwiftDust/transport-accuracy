@@ -5,6 +5,7 @@ from enum import Enum
 
 from cachetools import TTLCache
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from helpers.average_delay import average_delay
 from helpers.calculate_ontime import amount, percentage
 from helpers.database import get_delay_snapshots, init_database, store_delay_snapshot
@@ -59,6 +60,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 cache = TTLCache(maxsize=10, ttl=60)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # Svelte dev server
+        "https://transit.m4rt.nl",
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # TODO: add function to discover all countries via Mobility Database
