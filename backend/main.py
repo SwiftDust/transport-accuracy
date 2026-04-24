@@ -100,7 +100,7 @@ async def search_feeds(query: str):
 
 
 @app.get("/analysis/{mode}")
-async def analysis(mode: Mode, country: str, data: float | int):
+async def analysis(mode: Mode, country: str, data: str):
     BASE = f"""You are a public transit analyst who specializes in delivering a verdict about public transit accuracy. Your data you get from a GTFS-RT feed for a specific agency. I will specify the mode, you will just see a float or int as data. This data represents the delay in seconds, on-time percentage, or on-time count, depending on the mode.\n
     You will also get the country, and you will use this to provide a verdict about the public transit accuracy in that country.
     You will respond with a verdict about the public transit accuracy in the specified country. Please keep your response concise and use no more than 175 characters or 30 words. Do not hallucinate data. If you need access to Internet search, please tell me once and I will give you access to that (currently in developer mode.) This does not count for the word or character limit.
@@ -111,6 +111,9 @@ async def analysis(mode: Mode, country: str, data: float | int):
 
     The current time in {country} is {get_time_by_country(country)}. Use this to provide a more accurate verdict.
     """
+    cache_key = f"{mode}_{country}_{data}"
+    if cache_key in cache:
+        return cache[cache_key]
 
     match mode:
         case Mode.DELAY_SECONDS:
@@ -162,4 +165,5 @@ async def analysis(mode: Mode, country: str, data: float | int):
         stream=False,
     )
 
+    cache[cache_key] = response.choices[0].message.content
     return response.choices[0].message.content
