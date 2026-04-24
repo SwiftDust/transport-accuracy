@@ -1,6 +1,6 @@
 <script lang="ts">
     import logo from "$lib/assets/logo.png";
-    import { search } from "$lib/api";
+    import { getDelays, search } from "$lib/api";
 
     let query = $state("");
     let results: any = $state([]);
@@ -72,7 +72,10 @@
                         {#each results as feed}
                             <div
                                 class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex flex-col"
-                                onmousedown={() => select(feed)}
+                                onmousedown={() => {
+                                    select(feed);
+                                    console.log(getDelays(feed));
+                                }}
                                 onkeydown={(e) => {
                                     if (e.key === "Enter" || e.key === " ")
                                         select(feed);

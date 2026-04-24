@@ -46,7 +46,14 @@ app.add_middleware(
 
 
 @app.get("/delays")
-async def get_country_delays(feed: Feed):
+async def get_country_delays(
+    id: str,
+    rt_url: str,
+    location: str | None = None,
+    provider_name: str | None = None,
+    feed_name: str | None = None,
+):
+    feed = Feed(id=id, location=location, rt_url=rt_url)
     cache_key = f"feed_{feed.id}"
 
     if cache_key in cache:
@@ -55,7 +62,9 @@ async def get_country_delays(feed: Feed):
     try:
         realtime_delay = realtime(feed.rt_url)
         if not realtime_delay:
-            return {"error": f"no delay data available for {feed.location}"}
+            return {
+                "error": f"no delay data available for {feed.location if feed.location else feed.id}"
+            }
 
         realtime_data = DelayData(
             avg_delay=average_delay(realtime_delay),
