@@ -1,5 +1,8 @@
 <script>
     import logo from "$lib/assets/logo.png";
+    import { getCountryDelays } from "$lib/api";
+
+    let country = $state();
 </script>
 
 <div class="m-4">
@@ -29,9 +32,15 @@
             I want to see <br />
             real-time<span class="align-super text-sm">*</span> data <br />
             of
-            <span class="underline italic text-primary"
-                >Nederlandse Spoorwegen</span
-            >
+            <input
+                class="underline italic text-primary"
+                placeholder="Netherlands"
+                bind:value={country}
+                oninput={async () => {
+                    let delays = await getCountryDelays(country);
+                    console.log(delays);
+                }}
+            />
         </p>
     </div>
     <div class="mt-5">
