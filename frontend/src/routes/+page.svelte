@@ -1,8 +1,26 @@
-<script>
+<script lang="ts">
     import logo from "$lib/assets/logo.png";
-    import { getCountryDelays } from "$lib/api";
+    import { search } from "$lib/api";
 
-    let country = $state();
+    let query = $state("");
+    let results: any = $state([]);
+    let selected = $state(null);
+    let open = $state(false);
+
+    async function complete(q: string) {
+        if (q.length < 2) {
+            results = [];
+            return;
+        }
+        results = await search(q);
+        open = results.length > 0;
+    }
+
+    function select(feed: any) {
+        selected = feed;
+        query = feed.feed_name;
+        open = false;
+    }
 </script>
 
 <div class="m-4">
@@ -28,24 +46,67 @@
         </div>
     </div>
     <div class="mt-30">
-        <p class="text-5xl font-serif">
+        <div class="text-5xl font-serif">
             I want to see <br />
             real-time<span class="align-super text-sm">*</span> data <br />
             of
-            <input
-                class="underline italic text-primary"
-                placeholder="Netherlands"
-                bind:value={country}
-                oninput={async () => {
-                    let delays = await getCountryDelays(country);
-                    console.log(delays);
+
+            <div
+                class="relative"
+                onfocusout={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget)) {
+                        open = false;
+                    }
                 }}
-            />
-        </p>
+            >
+                <input
+                    class="underline italic text-primary"
+                    placeholder="Netherlands"
+                    bind:value={query}
+                    oninput={() => {
+                        complete(query);
+                    }}
+                />
+                {#if open}
+                    <div
+                        class="absolute z-10 bg-white border rounded shadow w-md mt-1"
+                        role="listbox"
+                    >
+                        {#each results as feed}
+                            <div
+                                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex flex-col"
+                                onmousedown={() => select(feed)}
+                                onkeydown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ")
+                                        select(feed);
+                                }}
+                                role="option"
+                                aria-selected={selected === feed}
+                                tabindex="0"
+                            >
+                                <span class="font-medium ml-2 text-lg">
+                                    {feed.provider_name}
+                                    {#if feed.feed_name}
+                                        ({feed.feed_name})
+                                    {/if}
+                                </span>
+                                <span class="italic ml-2 text-xs">
+                                    {feed.location}
+                                </span>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
+        </div>
     </div>
     <div class="mt-5">
         <p class="text-sm font-display text-gray-500">
-            * Realtime GTFS data may be less accurate or nonexistent in places.
+            * Realtime GTFS data may be less accurate or nonexistent in places.<br
+            />
+            How to use: Type in the full country or provider name and wait for the
+            feeds to load (this may take up to 30 seconds due to API limitations).
+            Then choose the data you want to see.
         </p>
     </div>
     <div class="flex flex-col md:flex-row mt-10 gap-10">
