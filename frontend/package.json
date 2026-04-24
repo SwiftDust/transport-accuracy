@@ -18,8 +18,16 @@
 		"@tailwindcss/vite": "^4.2.2",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
+		"svelte-flagpack": "^1.0.0",
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",
 		"vite": "^8.0.7"
+	},
+	"dependencies": {
+		"countrycodes": "^0.0.5",
+		"flag-icons": "^7.5.0",
+		"flagpack": "^1.0.5",
+		"flagpack-core": "^2.1.0",
+		"i18n-iso-countries": "^7.14.0"
 	}
 }

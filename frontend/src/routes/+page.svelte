@@ -1,11 +1,17 @@
 <script lang="ts">
     import logo from "$lib/assets/logo.png";
     import { getDelays, search } from "$lib/api";
+    import countries from "i18n-iso-countries";
+    import enLocale from "i18n-iso-countries/langs/en.json" assert { type: "json" };
+    import "flag-icons/css/flag-icons.min.css";
+    let { code } = $props();
 
     let query = $state("");
     let results: any = $state([]);
     let selected = $state(null);
     let open = $state(false);
+
+    countries.registerLocale(enLocale);
 
     let averageDelay = $state("No data available");
     let trainsOnTime = $state("No data available");
@@ -108,6 +114,11 @@
                                     {/if}
                                 </span>
                                 <span class="italic ml-2 text-xs">
+                                    <span
+                                        class="fi fi-{countries
+                                            .getAlpha2Code(feed.location, 'en')
+                                            ?.toLowerCase()} border-black rounded-xs drop-shadow-md"
+                                    ></span>
                                     {feed.location}
                                 </span>
                             </div>
@@ -117,16 +128,17 @@
             </div>
         </div>
     </div>
+
+    <div class="mt-5">
+        <p class="text-sm font-display text-gray-500">
+            * Realtime GTFS data may be less accurate or nonexistent in places.<br
+            />
+            How to use: Type in the full country or provider name and wait for the
+            feeds to load (this may take up to 30 seconds due to API limitations).
+            Then choose the data you want to see.
+        </p>
+    </div>
     {#if selected}
-        <div class="mt-5">
-            <p class="text-sm font-display text-gray-500">
-                * Realtime GTFS data may be less accurate or nonexistent in
-                places.<br />
-                How to use: Type in the full country or provider name and wait for
-                the feeds to load (this may take up to 30 seconds due to API limitations).
-                Then choose the data you want to see.
-            </p>
-        </div>
         <div class="flex flex-col md:flex-row mt-10 gap-10">
             <div class="flex flex-col max-w-xs">
                 <p class="text-green-600 font-display font-bold text-5xl">
