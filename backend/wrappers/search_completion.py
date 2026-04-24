@@ -2,6 +2,9 @@ from typing import Literal
 
 import httpx
 from google.transit import gtfs_realtime_pb2
+from helpers.refresh_token import refresh_token
+
+access_token = refresh_token().get("access_token")
 
 
 async def resolve_url(client: httpx.AsyncClient, url: str) -> str:
@@ -20,9 +23,7 @@ async def find_feeds(search_query: str, data_type: Literal["gtfs", "gtfs_rt"]):
                 "data_type": data_type,
                 "status": "active",
             },
-            headers={
-                "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjNiMDk1NzQ3YmY4MzMxZWE0YWQ1M2YzNzBjNjMyNjAxNzliMGQyM2EiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiTWFydCIsInBpY3R1cmUiOiJodHRwczovL2F2YXRhcnMuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3UvOTM0MjM3ODk_dj00IiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21vYmlsaXR5LWZlZWRzLXByb2QiLCJhdWQiOiJtb2JpbGl0eS1mZWVkcy1wcm9kIiwiYXV0aF90aW1lIjoxNzc2Nzc5MjMyLCJ1c2VyX2lkIjoiOXY0bkFjNHlNMmFGUGZ6Qk5ndUdkNGhsUUtIMiIsInN1YiI6Ijl2NG5BYzR5TTJhRlBmekJOZ3VHZDRobFFLSDIiLCJpYXQiOjE3NzY3ODEyMzksImV4cCI6MTc3Njc4NDgzOSwiZW1haWwiOiJtZUBtNHJ0Lm5sIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZ2l0aHViLmNvbSI6WyI5MzQyMzc4OSJdLCJlbWFpbCI6WyJtZUBtNHJ0Lm5sIl19LCJzaWduX2luX3Byb3ZpZGVyIjoiZ2l0aHViLmNvbSJ9fQ.XN-5IL4r9-P5eyNDE72nYJTmQUGBI6Ro4DgVJrZtkO3wGhUiWSPqMX8CC7b0-0xFJLza6XFscSZvtNsOgNe0jJ3a8mPkE7nrbDgNEYOzMmB0AeKhj92SZOXdzzh80NaZqWPErmeZO_KvICNf4J60P1k66nOqmCUPQ3BdrNA671KtPrbw9DOFnNRTIwNj1hhoDqyG3sT58mL532EIUxDrsv_NPRgvyPM76-MFsAtB4PggNmYlKsVBXHD_pgRpttUEEYu2IsTl6-msQM2eohW1PaUqGCfyzAw-eJKaSk7EhgyjGY7R8eA0wNJaSE6KJqOVLB2lnWhy_Lca28xtxELv1w"
-            },
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         if resp.status_code != 200:
