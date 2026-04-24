@@ -30,8 +30,7 @@
         <img src={logo} alt="logo" />
         <div class="hidden md:flex md:flex-col">
             <p class="font-display text-2xl">
-                <span class="font-bold text-primary">2,350</span>
-                minutes of data logged and counting • Serving data of
+                Serving data of
                 <span class="font-bold text-primary">172</span>
                 unique providers
             </p>
@@ -48,9 +47,7 @@
     <div class="mt-30">
         <div class="text-5xl font-serif">
             I want to see <br />
-            real-time<span class="align-super text-sm">*</span> data <br />
-            of
-
+            real-time<span class="align-super text-sm">*</span> data of
             <div
                 class="relative"
                 onfocusout={(e) => {
