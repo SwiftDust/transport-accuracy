@@ -42,9 +42,12 @@
         <img src={logo} alt="logo" />
         <div class="hidden md:flex md:flex-col">
             <p class="font-display text-2xl">
-                Serving data of
-                <span class="font-bold text-primary">172</span>
+                Serving data of over
+                <span class="font-bold text-primary">6000</span>
                 unique providers
+                <span class="text-xs text-gray-500"
+                    >(powered by Mobility Database)</span
+                >
             </p>
             <p class="font-mono text-sm italic">
                 made by <a
