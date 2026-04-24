@@ -141,7 +141,13 @@
     {#if selected}
         <div class="flex flex-col md:flex-row mt-10 gap-10">
             <div class="flex flex-col max-w-xs">
-                <p class="text-green-600 font-display font-bold text-5xl">
+                <p
+                    class="{averageDelay < 60
+                        ? 'text-green-600'
+                        : averageDelay < 180
+                          ? 'text-yellow-600'
+                          : 'text-red-600'} font-display font-bold text-5xl"
+                >
                     {Math.round(averageDelay * 10) / 10}
                 </p>
                 <p class="italic font-serif">seconds average delay right now</p>
@@ -152,7 +158,7 @@
                 </p>
             </div>
             <div class="flex flex-col max-w-xs">
-                <p class="text-green-600 font-display font-bold text-5xl">
+                <p class={`text-green-600 font-display font-bold text-5xl`}>
                     {trainsOnTime}
                 </p>
                 <p class="italic font-serif">trains on time</p>
@@ -164,7 +170,15 @@
                 </p>
             </div>
             <div class="flex flex-col max-w-xs">
-                <p class="text-orange-600 font-display font-bold text-5xl">
+                <p
+                    class={`${
+                        onTimePercentage >= 75
+                            ? "text-green-600"
+                            : onTimePercentage >= 35
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                    } font-display font-bold text-5xl`}
+                >
                     {Math.round(onTimePercentage * 10) / 10}%
                 </p>
                 <p class="italic font-serif">
