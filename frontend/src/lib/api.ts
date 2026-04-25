@@ -1,4 +1,5 @@
 import type { Feed } from "./types";
+import type { Mode } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL;
 
@@ -18,6 +19,20 @@ export async function getDelays(feed: Feed): Promise<any> {
 
 export async function search(query: string): Promise<any> {
   const res = await fetch(`${BASE}/search/${query}`);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function getAIAnalysis(
+  mode: Mode,
+  country: string,
+  data: string,
+): Promise<any> {
+  const params = new URLSearchParams({
+    country: country,
+    data: data,
+  });
+  const res = await fetch(`${BASE}/analysis/${mode}?${params}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }

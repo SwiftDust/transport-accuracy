@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from helpers.average_delay import average_delay
 from helpers.calculate_ontime import amount, percentage
 from helpers.get_time import get_time_by_country
+from helpers.search_web import search_web
 from openrouter import OpenRouter
 from wrappers.fetch_trip_updates import realtime
 from wrappers.search_completion import find_feeds
@@ -101,9 +102,13 @@ async def search_feeds(query: str):
 
 @app.get("/analysis/{mode}")
 async def analysis(mode: Mode, country: str, data: str):
+    print("request with mode=", mode, "country=", country, "data=", data)
     BASE = f"""You are a public transit analyst who specializes in delivering a verdict about public transit accuracy. Your data you get from a GTFS-RT feed for a specific agency. I will specify the mode, you will just see a float or int as data. This data represents the delay in seconds, on-time percentage, or on-time count, depending on the mode.\n
     You will also get the country, and you will use this to provide a verdict about the public transit accuracy in that country.
-    You will respond with a verdict about the public transit accuracy in the specified country. Please keep your response concise and use no more than 175 characters or 30 words. Do not hallucinate data. If you need access to Internet search, please tell me once and I will give you access to that (currently in developer mode.) This does not count for the word or character limit.
+    You will respond with a verdict about the public transit accuracy in the specified country.
+    Please keep your response concise and use no more than 175 characters or 30 words. However, do not mention this in your answer.
+    The answer is intended for on a website, so do not use anything like "" or the amount of characters used, nor should you use smileys in your response.
+    Do not hallucinate data.
 
     Here is the data you need to analyze:
     country: {country}
@@ -130,15 +135,32 @@ async def analysis(mode: Mode, country: str, data: str):
             """
             )
         case Mode.ON_TIME:
+            results = search_web(f"how many passengers on train {country} average")
+
+            print("RESULTS " + str(results))
+
+            context = "\n\n".join(
+                [
+                    f"[{r['title']}]({r['url']})\n{r['description']}"
+                    for r in results.get("web", {}).get("results", [])
+                ]
+            )
+
+            print("CONTEXT HAT HAHAHAHA " + context)
+
             prompt = (
                 BASE
-                + """\nMode: ON_TIME\nYou are analyzing the amount of trains that are on time (less than 60 seconds delay on any of the stops in the entire trip.)
+                + f"""\nMode: ON_TIME\nYou are analyzing the amount of trains that are on time (less than 60 seconds delay on any of the stops in the entire trip.)
             Here is an example of an analysis for when there were 5421 trains on time in a made-up country (this means, please don't rely on these numbers as your source of truth):
 
             ---
             In your country, there's an average of 324 people on a train. This means 1.8 million people are transported to their destination without friction right now!
             ---
             If you get an unlikely number like 0 or -1, respond with "No data available".
+
+            If you want, here are some sources you can look at to find average passenger count on a train:\n\n{context}
+
+            If this data didn't produce anything useful, please don't hallucinate numbers but instead just make do with the data you have.
             """
             )
         case Mode.ON_TIME_PERCENTAGE:
@@ -152,11 +174,6 @@ async def analysis(mode: Mode, country: str, data: str):
             ---
             If you get something like 100% or 0% or anything you deem unlikely to be real, respond with "No data available".
             """
-            )
-        case _:
-            prompt = (
-                BASE
-                + """\nMode: UNKNOWN\nThere was no mode provided, so please respond with "No data available"."""
             )
 
     response = client.chat.send(

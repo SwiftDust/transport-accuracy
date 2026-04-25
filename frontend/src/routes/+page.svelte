@@ -1,6 +1,7 @@
 <script lang="ts">
     import logo from "$lib/assets/logo.png";
-    import { getDelays, search } from "$lib/api";
+    import { getDelays, search, getAIAnalysis } from "$lib/api";
+    import type { Mode } from "$lib/types";
     import countries from "i18n-iso-countries";
     import enLocale from "i18n-iso-countries/langs/en.json" assert { type: "json" };
     import "flag-icons/css/flag-icons.min.css";
@@ -38,6 +39,14 @@
             trainsOnTime = data.realtime.on_time;
             onTimePercentage = data.realtime.on_time_percentage;
         });
+    }
+
+    let country = $state("");
+
+    async function updateAnalysis(mode: Mode, data: string) {
+        const analysis = await getAIAnalysis(mode, country, data);
+        console.log(analysis);
+        return analysis;
     }
 </script>
 
@@ -96,11 +105,13 @@
                                 onmousedown={() => {
                                     select(feed);
                                     updateStats(feed);
+                                    country = feed.location;
                                 }}
                                 onkeydown={(e) => {
                                     if (e.key === "Enter" || e.key === " ") {
                                         select(feed);
                                         updateStats(feed);
+                                        country = feed.location;
                                     }
                                 }}
                                 role="option"
@@ -134,7 +145,7 @@
             * Realtime GTFS data may be less accurate or nonexistent in places.<br
             />
             How to use: Type in the full country or provider name and wait for the
-            feeds to load (this may take up to 30 seconds due to API limitations).
+            feeds to load (be patient, this may take up to 30 seconds due to API limitations).
             Then choose the data you want to see.
         </p>
     </div>
@@ -152,10 +163,18 @@
                 </p>
                 <p class="italic font-serif">seconds average delay right now</p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
-                <p class="font-serif text-md">
-                    Not a bad score for 5:34PM, rush hour! That's less than a
-                    minute for the most crowded part of the day!
-                </p>
+                <div class="font-serif text-md">
+                    {#await updateAnalysis("delay_seconds", (Math.round(averageDelay * 10) / 10).toString())}
+                        <p>
+                            AI analysis loading... please be patient as this may
+                            take up to a couple of minutes
+                        </p>
+                    {:then result}
+                        <p>{result}</p>
+                    {:catch error}
+                        <p>Error: {error.message}</p>
+                    {/await}
+                </div>
             </div>
             <div class="flex flex-col max-w-xs">
                 <p class={`text-green-600 font-display font-bold text-5xl`}>
@@ -163,11 +182,18 @@
                 </p>
                 <p class="italic font-serif">trains on time</p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
-                <p class="font-serif text-md">
-                    In your country, there's an average of 324 people on a
-                    train. This means 1.8 million people are transported to
-                    their destination without friction right now!
-                </p>
+                <div class="font-serif text-md">
+                    {#await updateAnalysis("on_time", trainsOnTime.toString())}
+                        <p>
+                            AI analysis loading... please be patient as this may
+                            take up to a couple of minutes
+                        </p>
+                    {:then result}
+                        <p>{result}</p>
+                    {:catch error}
+                        <p>Error: {error.message}</p>
+                    {/await}
+                </div>
             </div>
             <div class="flex flex-col max-w-xs">
                 <p
@@ -185,10 +211,18 @@
                     of trains aren't delayed right now
                 </p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
-                <p class="font-serif text-md">
-                    Even for rush hour, this is not the best ever, but keep in
-                    mind most of these are small &lt;5 minute delays.
-                </p>
+                <div class="font-serif text-md">
+                    {#await updateAnalysis("on_time_percentage", onTimePercentage.toString())}
+                        <p>
+                            AI analysis loading... please be patient as this may
+                            take up to a couple of minutes
+                        </p>
+                    {:then result}
+                        <p>{result}</p>
+                    {:catch error}
+                        <p>Error: {error.message}</p>
+                    {/await}
+                </div>
             </div>
         </div>
     {/if}

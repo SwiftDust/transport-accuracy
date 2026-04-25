@@ -5,3 +5,5 @@ export type Feed = {
   provider_name?: string;
   location?: string;
 };
+
+export type Mode = "delay_seconds" | "on_time" | "on_time_percentage";
