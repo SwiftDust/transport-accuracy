@@ -1,20 +1,23 @@
+from collections import Counter
 from typing import Literal
 
 import httpx
 from google.transit import gtfs_realtime_pb2
 from helpers.refresh_token import refresh_token
 
-access_token = refresh_token().get("access_token")
-
 
 async def resolve_url(client: httpx.AsyncClient, url: str) -> str:
-    resp = await client.head(url, follow_redirects=True)
-    return str(resp.url)
+    try:
+        resp = await client.head(url, follow_redirects=True, timeout=5.0)
+        return str(resp.url)
+    except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.ConnectError):
+        return url
 
 
 async def find_feeds(search_query: str, data_type: Literal["gtfs", "gtfs_rt"]):
     """data_type = 'gtfs' for static, 'gtfs_rt' for realtime"""
-    async with httpx.AsyncClient() as client:
+    access_token = refresh_token().get("access_token")
+    async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(
             "https://api.mobilitydatabase.org/v1/search",
             params={
@@ -46,13 +49,18 @@ async def find_feeds(search_query: str, data_type: Literal["gtfs", "gtfs_rt"]):
             rt_url = f.get("source_info", {}).get("producer_url")
             if rt_url:
                 rt_url = await resolve_url(client, rt_url)
+
+            locations = f.get("locations", [])
+            countries = [l.get("country") for l in locations if l.get("country")]
+            country = Counter(countries).most_common(1)[0][0] if countries else None
+
             results.append(
                 {
                     "id": f.get("id"),
                     "provider_name": f.get("provider"),
                     "feed_name": f.get("feed_name"),
                     "rt_url": rt_url,
-                    "location": f.get("locations", [{}])[0].get("country"),
+                    "location": country,
                     # "static_url": f.get("latest_dataset", {}).get("hosted_url"),
                 }
             )

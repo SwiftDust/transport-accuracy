@@ -11,6 +11,7 @@
     let results: any = $state(null);
     let selected = $state(null);
     let open = $state(false);
+    let statsLoaded = $state(false);
 
     countries.registerLocale(enLocale);
 
@@ -41,12 +42,24 @@
             trainsOnTime = data.realtime.on_time;
             onTimePercentage = data.realtime.on_time_percentage;
         });
+        statsLoaded = true;
     }
 
     let country = $state("");
+    let providerName = $state("");
 
-    async function updateAnalysis(mode: Mode, data: string) {
-        const analysis = await getAIAnalysis(mode, country, data);
+    async function updateAnalysis(
+        avgDelay: float,
+        onTime: int,
+        onTimePercentage: float,
+    ) {
+        const analysis = await getAIAnalysis(
+            country,
+            providerName,
+            avgDelay,
+            onTime,
+            onTimePercentage,
+        );
         console.log(analysis);
         return analysis;
     }
@@ -109,6 +122,7 @@
                                         select(feed);
                                         updateStats(feed);
                                         country = feed.location;
+                                        providerName = feed.provider_name;
                                     }}
                                     onkeydown={(e) => {
                                         if (
@@ -118,6 +132,7 @@
                                             select(feed);
                                             updateStats(feed);
                                             country = feed.location;
+                                            providerName = feed.provider_name;
                                         }
                                     }}
                                     role="option"
@@ -139,7 +154,7 @@
                                                 )
                                                 ?.toLowerCase()} border-black rounded-xs drop-shadow-md"
                                         ></span>
-                                        {feed.location}
+                                        Most frequently tracks {feed.location}
                                     </span>
                                 </div>
                             {/each}
@@ -161,7 +176,7 @@
             Then choose the data you want to see.
         </p>
     </div>
-    {#if selected}
+    {#if selected && statsLoaded}
         <div class="flex flex-col md:flex-row mt-10 gap-10">
             <div class="flex flex-col max-w-xs">
                 <p
@@ -176,10 +191,10 @@
                 <p class="italic font-serif">seconds average delay right now</p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
-                    {#await updateAnalysis("delay_seconds", (Math.round(averageDelay * 10) / 10).toString())}
+                    {#await updateAnalysis(averageDelay, trainsOnTime, onTimePercentage)}
                         <TextPlaceholder />
                     {:then result}
-                        <p>{result}</p>
+                        <p>{result.delay_analysis}</p>
                     {:catch error}
                         <p>Error: {error.message}</p>
                     {/await}
@@ -192,10 +207,10 @@
                 <p class="italic font-serif">trains on time</p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
-                    {#await updateAnalysis("on_time", trainsOnTime.toString())}
+                    {#await updateAnalysis(averageDelay, trainsOnTime, onTimePercentage)}
                         <TextPlaceholder />
                     {:then result}
-                        <p>{result}</p>
+                        <p>{result.on_time_analysis}</p>
                     {:catch error}
                         <p>Error: {error.message}</p>
                     {/await}
@@ -218,10 +233,10 @@
                 </p>
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
-                    {#await updateAnalysis("on_time_percentage", onTimePercentage.toString())}
+                    {#await updateAnalysis(averageDelay, trainsOnTime, onTimePercentage)}
                         <TextPlaceholder />
                     {:then result}
-                        <p>{result}</p>
+                        <p>{result.percentage_analysis}</p>
                     {:catch error}
                         <p>Error: {error.message}</p>
                     {/await}

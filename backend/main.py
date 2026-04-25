@@ -1,7 +1,7 @@
+import json
 import os
 from dataclasses import dataclass
 from enum import Enum
-from webbrowser import get
 
 from cachetools import TTLCache
 from fastapi import FastAPI
@@ -34,12 +34,6 @@ class Feed:
     id: str
     location: str
     rt_url: str
-
-
-class Mode(str, Enum):
-    DELAY_SECONDS = "delay_seconds"
-    ON_TIME = "on_time"
-    ON_TIME_PERCENTAGE = "on_time_percentage"
 
 
 app = FastAPI()
@@ -100,82 +94,72 @@ async def search_feeds(query: str):
     return await find_feeds(query, "gtfs_rt")
 
 
-@app.get("/analysis/{mode}")
-async def analysis(mode: Mode, country: str, data: str):
-    print("request with mode=", mode, "country=", country, "data=", data)
-    BASE = f"""You are a public transit analyst who specializes in delivering a verdict about public transit accuracy. Your data you get from a GTFS-RT feed for a specific agency. I will specify the mode, you will just see a float or int as data. This data represents the delay in seconds, on-time percentage, or on-time count, depending on the mode.\n
-    You will also get the country, and you will use this to provide a verdict about the public transit accuracy in that country.
-    You will respond with a verdict about the public transit accuracy in the specified country.
-    Please keep your response concise and use no more than 175 characters or 30 words. However, do not mention this in your answer.
-    The answer is intended for on a website, so do not use anything like "" or the amount of characters used, nor should you use smileys in your response.
-    Do not hallucinate data.
+@app.get("/analysis")
+async def analysis(
+    country: str,
+    provider_name: str,
+    avg_delay: float,
+    on_time: int,
+    on_time_percentage: float,
+):
+    results = search_web(f"how many passengers on train {country} average")
+    context = "\n\n".join(
+        [
+            f"[{r['title']}]({r['url']})\n{r['description']}"
+            for r in results.get("web", {}).get("results", [])
+        ]
+    )
 
-    Here is the data you need to analyze:
-    country: {country}
-    data: {data}
+    prompt = f"""You are a public transit analyst delivering verdicts about public transit accuracy from GTFS-RT data.
 
-    The current time in {country} is {get_time_by_country(country)}. Use this to provide a more accurate verdict.
+    Here is the data for a feed called {provider_name} (most likely from {country} but this may be inaccurate):
+    Please be aware the feed name may not reflect the actual service name or country. In that case, fall back to the country name; {country}.
+        - Average delay: {avg_delay:.1f} seconds
+        - Trains on time: {on_time}
+        - On-time percentage: {on_time_percentage:.1f}%
+
+        Return ONLY a raw JSON object with no markdown, no code fences, no explanation:
+        {{
+            "delay_analysis": "...",
+            "on_time_analysis": "...",
+            "percentage_analysis": "..."
+        }}
+
+        Rules for all three fields:
+        - Max 175 characters / 30 words each
+        - No emojis, no quotation marks, no character counts
+        - Do not hallucinate data
+        - If a value is 0, -1, 100%, or otherwise implausible, write "No data available" for that field
+        - This is realtime data, so use the present tense when possible.
+
+        Guidance per field:
+        - delay_analysis: Analyze the {avg_delay:.1f}s average delay. Under 60s is generally on time. Consider the time of day ({get_time_by_country(country)}) for context. Negative values may mean trains ran early.
+        - on_time_analysis: Analyze {on_time} on-time trains. Try to estimate people transported using average passenger counts (seeing the source below). If sources are unhelpful, don't hallucinate numbers.
+        - percentage_analysis: Analyze the {on_time_percentage:.1f}% on-time rate. Consider the time of day for context. Note if small delays are likely the cause of a low score.
+
+        Use the provider name ({provider_name}) to guide your analysis. For example, Deutsche Bahn (DELFI Realtime Data) is less likely to be on time than NS (OVApi).
+        Passenger data sources: {context}.
     """
-    cache_key = f"{mode}_{country}_{data}"
+
+    print(prompt)
+    cache_key = f"analysis_{country}"
     if cache_key in cache:
         return cache[cache_key]
 
-    match mode:
-        case Mode.DELAY_SECONDS:
-            prompt = (
-                BASE
-                + """\nMode: DELAY_SECONDS\nYou are analyzing delay in seconds. If the delay is less than 60 seconds, most of the transit will likely be on time.
-            Here is an example of an analysis for when the average delay was 40.7 seconds at 5:34 pm:
-
-            ---
-            Not a bad score for 5:34PM, rush hour! That's less than a minute for the most crowded part of the day!
-            ---
-
-            If you get an unlikely number like 0 or -1, respond with "No data available". If you get a natural negative number, however unlikely, it could be that most trains were early. In that case, still provide an analysis.
-            """
-            )
-        case Mode.ON_TIME:
-            results = search_web(f"how many passengers on train {country} average")
-            context = "\n\n".join(
-                [
-                    f"[{r['title']}]({r['url']})\n{r['description']}"
-                    for r in results.get("web", {}).get("results", [])
-                ]
-            )
-
-            prompt = (
-                BASE
-                + f"""\nMode: ON_TIME\nYou are analyzing the amount of trains that are on time (less than 60 seconds delay on any of the stops in the entire trip.)
-            Here is an example of an analysis for when there were 5421 trains on time in a made-up country (this means, please don't rely on these numbers as your source of truth):
-
-            ---
-            In your country, there's an average of 324 people on a train. This means 1.8 million people are transported to their destination without friction right now!
-            ---
-            If you get an unlikely number like 0 or -1, respond with "No data available".
-
-            If you want, here are some sources you can look at to find average passenger count on a train:\n\n{context}
-
-            If this data didn't produce anything useful, please don't hallucinate numbers but instead just make do with the data you have.
-            """
-            )
-        case Mode.ON_TIME_PERCENTAGE:
-            prompt = (
-                BASE
-                + """\nMode: ON_TIME_PERCENTAGE\nYou are analyzing the percentage of trains that are on time (less than 60 seconds delay on any of the stops in the entire trip.)
-            Here is an example of an analysis for when the on-time percentage was 33.1% at 5:34 pm:
-
-            ---
-            Even for rush hour, this is not the best ever, but keep in mind most of these are small <5 minute delays.
-            ---
-            If you get something like 100% or 0% or anything you deem unlikely to be real, respond with "No data available".
-            """
-            )
-
     response = client.chat.send(
-        model="qwen3/32b",
+        model="google/gemini-2.5-flash-lite-preview-09-2025",
         messages=[{"role": "user", "content": prompt}],
         stream=False,
     )
 
-    cache[cache_key] = response.choices[0].message.content
-    return response.choices[0].message.content
+    try:
+        result = json.loads(response.choices[0].message.content)
+    except json.JSONDecodeError:
+        result = {
+            "delay_analysis": "No data available",
+            "on_time_analysis": "No data available",
+            "percentage_analysis": "No data available",
+        }
+
+    cache[cache_key] = result
+    return result
