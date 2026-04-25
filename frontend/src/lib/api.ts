@@ -36,7 +36,7 @@ export async function getAIAnalysis(
     on_time: onTime,
     on_time_percentage: onTimePercentage,
   });
-  const res = await fetch(`${BASE}/analysis/?${params}`);
+  const res = await fetch(`${BASE}/analysis?${params}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
