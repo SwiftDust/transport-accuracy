@@ -30,6 +30,7 @@
 		"flagpack-core": "^2.1.0",
 		"flowbite": "^4.0.1",
 		"flowbite-svelte": "^1.33.1",
-		"i18n-iso-countries": "^7.14.0"
+		"i18n-iso-countries": "^7.14.0",
+		"svelte-countup": "^0.2.8"
 	}
 }

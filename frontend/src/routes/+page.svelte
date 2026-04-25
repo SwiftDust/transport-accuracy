@@ -1,7 +1,7 @@
 <script lang="ts">
     import logo from "$lib/assets/logo.png";
     import { getDelays, search, getAIAnalysis } from "$lib/api";
-    import type { Mode } from "$lib/types";
+    import Countup from "svelte-countup";
     import { ListPlaceholder, TextPlaceholder } from "flowbite-svelte";
     import countries from "i18n-iso-countries";
     import enLocale from "i18n-iso-countries/langs/en.json" assert { type: "json" };
@@ -72,26 +72,28 @@
         <img src={logo} alt="logo" />
         <div class="hidden md:flex md:flex-col">
             <p class="font-display text-2xl">
-                Serving data of over
-                <span class="font-bold text-primary">6000</span>
-                unique providers
+                Showing data of
+                <span class="font-bold text-primary"
+                    ><Countup value={6000} /></span
+                >
+                sources
                 <span class="text-xs text-gray-500"
                     >(powered by Mobility Database)</span
                 >
             </p>
-            <p class="font-mono text-sm italic">
+            <p class="font-display text-sm italic">
                 made by <a
                     href="https://m4rt.nl"
                     class="text-gray-500 underline"
                 >
-                    m4rt.nl
+                    Mart Zielman
                 </a>
             </p>
         </div>
     </div>
     <div class="mt-30">
         <div class="text-5xl font-serif">
-            I want to see <br />
+            Show me <br />
             real-time<span class="align-super text-sm">*</span> data of
             <div
                 class="relative"
@@ -169,11 +171,7 @@
 
     <div class="mt-5">
         <p class="text-sm font-display text-gray-500">
-            * Realtime GTFS data may be less accurate or nonexistent in places.<br
-            />
-            How to use: Type in the full country or provider name and wait for the
-            feeds to load (be patient, this may take up to 30 seconds due to API limitations).
-            Then choose the data you want to see.
+            * Realtime GTFS data may be less accurate or nonexistent in places.
         </p>
     </div>
     {#if selected && statsLoaded}
