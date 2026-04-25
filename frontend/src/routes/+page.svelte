@@ -90,7 +90,7 @@
             >
                 <input
                     class="underline italic text-primary placeholder-blue-200"
-                    placeholder="Country..."
+                    placeholder="Search country..."
                     bind:value={query}
                     oninput={() => {
                         complete(query);

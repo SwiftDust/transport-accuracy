@@ -136,6 +136,12 @@ async def analysis(mode: Mode, country: str, data: str):
             )
         case Mode.ON_TIME:
             results = search_web(f"how many passengers on train {country} average")
+            context = "\n\n".join(
+                [
+                    f"[{r['title']}]({r['url']})\n{r['description']}"
+                    for r in results.get("web", {}).get("results", [])
+                ]
+            )
 
             prompt = (
                 BASE
