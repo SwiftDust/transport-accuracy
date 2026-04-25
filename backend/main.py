@@ -137,17 +137,6 @@ async def analysis(mode: Mode, country: str, data: str):
         case Mode.ON_TIME:
             results = search_web(f"how many passengers on train {country} average")
 
-            print("RESULTS " + str(results))
-
-            context = "\n\n".join(
-                [
-                    f"[{r['title']}]({r['url']})\n{r['description']}"
-                    for r in results.get("web", {}).get("results", [])
-                ]
-            )
-
-            print("CONTEXT HAT HAHAHAHA " + context)
-
             prompt = (
                 BASE
                 + f"""\nMode: ON_TIME\nYou are analyzing the amount of trains that are on time (less than 60 seconds delay on any of the stops in the entire trip.)

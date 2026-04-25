@@ -2,13 +2,13 @@
     import logo from "$lib/assets/logo.png";
     import { getDelays, search, getAIAnalysis } from "$lib/api";
     import type { Mode } from "$lib/types";
+    import { ListPlaceholder, TextPlaceholder } from "flowbite-svelte";
     import countries from "i18n-iso-countries";
     import enLocale from "i18n-iso-countries/langs/en.json" assert { type: "json" };
     import "flag-icons/css/flag-icons.min.css";
-    let { code } = $props();
 
     let query = $state("");
-    let results: any = $state([]);
+    let results: any = $state(null);
     let selected = $state(null);
     let open = $state(false);
 
@@ -20,9 +20,11 @@
 
     async function complete(q: string) {
         if (q.length < 2) {
-            results = [];
+            results = null;
             return;
         }
+        results = null;
+        open = true;
         results = await search(q);
         open = results.length > 0;
     }
@@ -87,8 +89,8 @@
                 }}
             >
                 <input
-                    class="underline italic text-primary"
-                    placeholder="Netherlands"
+                    class="underline italic text-primary placeholder-blue-200"
+                    placeholder="Country..."
                     bind:value={query}
                     oninput={() => {
                         complete(query);
@@ -99,41 +101,51 @@
                         class="absolute z-10 bg-white border rounded shadow w-md mt-1"
                         role="listbox"
                     >
-                        {#each results as feed}
-                            <div
-                                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex flex-col"
-                                onmousedown={() => {
-                                    select(feed);
-                                    updateStats(feed);
-                                    country = feed.location;
-                                }}
-                                onkeydown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
+                        {#if results}
+                            {#each results as feed}
+                                <div
+                                    class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex flex-col"
+                                    onmousedown={() => {
                                         select(feed);
                                         updateStats(feed);
                                         country = feed.location;
-                                    }
-                                }}
-                                role="option"
-                                aria-selected={selected === feed}
-                                tabindex="0"
-                            >
-                                <span class="font-medium ml-2 text-lg">
-                                    {feed.provider_name}
-                                    {#if feed.feed_name}
-                                        ({feed.feed_name})
-                                    {/if}
-                                </span>
-                                <span class="italic ml-2 text-xs">
-                                    <span
-                                        class="fi fi-{countries
-                                            .getAlpha2Code(feed.location, 'en')
-                                            ?.toLowerCase()} border-black rounded-xs drop-shadow-md"
-                                    ></span>
-                                    {feed.location}
-                                </span>
-                            </div>
-                        {/each}
+                                    }}
+                                    onkeydown={(e) => {
+                                        if (
+                                            e.key === "Enter" ||
+                                            e.key === " "
+                                        ) {
+                                            select(feed);
+                                            updateStats(feed);
+                                            country = feed.location;
+                                        }
+                                    }}
+                                    role="option"
+                                    aria-selected={selected === feed}
+                                    tabindex="0"
+                                >
+                                    <span class="font-medium ml-2 text-lg">
+                                        {feed.provider_name}
+                                        {#if feed.feed_name}
+                                            ({feed.feed_name})
+                                        {/if}
+                                    </span>
+                                    <span class="italic ml-2 text-xs">
+                                        <span
+                                            class="fi fi-{countries
+                                                .getAlpha2Code(
+                                                    feed.location,
+                                                    'en',
+                                                )
+                                                ?.toLowerCase()} border-black rounded-xs drop-shadow-md"
+                                        ></span>
+                                        {feed.location}
+                                    </span>
+                                </div>
+                            {/each}
+                        {:else}
+                            <ListPlaceholder />
+                        {/if}
                     </div>
                 {/if}
             </div>
@@ -165,10 +177,7 @@
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
                     {#await updateAnalysis("delay_seconds", (Math.round(averageDelay * 10) / 10).toString())}
-                        <p>
-                            AI analysis loading... please be patient as this may
-                            take up to a couple of minutes
-                        </p>
+                        <TextPlaceholder />
                     {:then result}
                         <p>{result}</p>
                     {:catch error}
@@ -184,10 +193,7 @@
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
                     {#await updateAnalysis("on_time", trainsOnTime.toString())}
-                        <p>
-                            AI analysis loading... please be patient as this may
-                            take up to a couple of minutes
-                        </p>
+                        <TextPlaceholder />
                     {:then result}
                         <p>{result}</p>
                     {:catch error}
@@ -213,10 +219,7 @@
                 <hr class="my-2 h-0.5 border-t-0 bg-gray-400" />
                 <div class="font-serif text-md">
                     {#await updateAnalysis("on_time_percentage", onTimePercentage.toString())}
-                        <p>
-                            AI analysis loading... please be patient as this may
-                            take up to a couple of minutes
-                        </p>
+                        <TextPlaceholder />
                     {:then result}
                         <p>{result}</p>
                     {:catch error}

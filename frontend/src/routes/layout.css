@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap");
 @import "tailwindcss";
+@plugin 'flowbite/plugin';
 
 @theme {
     --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
@@ -8,3 +9,6 @@
     --font-display: "Inter", Roboto, sans-serif;
     --color-primary: #4f70c8;
 }
+
+@source "../../node_modules/flowbite-svelte/dist";
+@source "../../node_modules/flowbite-svelte-icons/dist";

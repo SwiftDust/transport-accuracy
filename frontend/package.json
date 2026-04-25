@@ -28,6 +28,8 @@
 		"flag-icons": "^7.5.0",
 		"flagpack": "^1.0.5",
 		"flagpack-core": "^2.1.0",
+		"flowbite": "^4.0.1",
+		"flowbite-svelte": "^1.33.1",
 		"i18n-iso-countries": "^7.14.0"
 	}
 }
