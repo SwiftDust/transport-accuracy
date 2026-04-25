@@ -2,7 +2,7 @@
 
 This is an API and frontend to show the average delays and percentage of on time trains and metros. The search function uses Mobility Database data to search feeds, which may not be 100% accurate. It then extracts GTFS realtime delay data and compiles it into readable stats. This is sent to an AI (qwen3/32b at the moment) which writes a short analysis. To prevent AI overuse, responses are cached for 30 seconds.
 
-![Preview](/static/preview.png)
+![Preview](/frontend/static/preview.png)
 
 ## How to use
 The repository is divided into two directories, `backend/` and `frontend/`. They both have their own modules and setup.
